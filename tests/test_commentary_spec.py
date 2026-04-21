@@ -20,6 +20,8 @@ class CommentarySpecTests(unittest.TestCase):
         self.assertTrue(p.supporting_argument_2)
         self.assertTrue(p.counterargument)
         self.assertEqual(p.draft_quality_level, 'READY')
+        self.assertGreaterEqual(len(p.full_draft), 1000)
+        self.assertLessEqual(len(p.full_draft), 1500)
 
         export_outputs(p)
         md = Path('outputs/markdown/comment_pack_48eccbf0dbc9.md').read_text(encoding='utf-8')
@@ -31,6 +33,13 @@ class CommentarySpecTests(unittest.TestCase):
         self.assertNotIn('具备评论价值', author_layer)
         self.assertNotIn('建议先形成结构化短评再扩写', author_layer)
         self.assertNotIn('可从以下角度分析', author_layer)
+
+    def test_hold_when_policy_facts_are_insufficient(self):
+        n = build_news_item('https://www.moe.gov.cn/special/ai-policy')
+        c = evaluate_candidate(n)
+        p = build_comment_pack(n, c)
+        self.assertEqual(p.status, 'HOLD')
+        self.assertEqual(p.hold_reason, '事实提炼不足，无法形成可发评论底稿')
 
 
 if __name__ == '__main__':

@@ -133,13 +133,23 @@ def _planning(n: NewsItem) -> dict:
 
 
 def _fact_candidates(n: NewsItem) -> list[str]:
-    return [
-        f'该信息标题为“{n.title}”，核心议题与AI教育应用相关。',
-        f'该条来源链接为 {n.url}。',
-        f'该条来源层级判定为 {n.source_level}。',
-        f'该条内容类型判定为 {n.content_type}。',
-        f'摘要信息为：{n.summary}',
-    ]
+    text = f'{n.title} {n.summary}'.lower()
+    placeholder_summary = n.summary.strip() in {'待补充摘要', '', '暂无'}
+    facts: list[str] = []
+
+    if any(k in text for k in ['发布', '印发', '出台', '通知', '方案', 'policy', '政策']):
+        facts.append('政策动作事实：材料明确指向“发布/出台政策动作”，而非一般舆情转述。')
+    if any(k in text for k in ['学校', '教师', '学生', '课程', '中小学', '高校']):
+        facts.append('实施对象事实：文本涉及学校、教师、学生或课程等明确教育实施对象。')
+    if any(k in text for k in ['规范', '标准', '评价', '治理', '监管', '责任', '边界']):
+        facts.append('治理要求事实：材料出现规范、评价、治理或边界等制度性要求。')
+    if any(k in text for k in ['公平', '质量', '课堂', '学习', '育人', '负担', '效果']):
+        facts.append('教育后果事实：文本触及课堂效果、教育公平、学习质量等教育后果。')
+
+    if not placeholder_summary:
+        facts.append(f'摘要事实：{n.summary}')
+
+    return facts
 
 
 def _core_problem_for(n: NewsItem) -> str:
@@ -167,17 +177,45 @@ def _full_draft(n: NewsItem, core_question: str, main_judgement: str, arg1: str,
     p1 = f'围绕“{n.title}”的讨论，表面上看是一次AI应用信息更新，真正值得追问的是：{core_question} 这不是一条可以被当作技术新闻快速消费的消息，而是教育系统如何吸收新工具、又不偏离育人目标的现实考题。'
     p2 = f'就本文所依据的信息看，至少有几条关键事实不能跳过：第一，事件指向的主题明确是AI与教育结合；第二，信息来源可回溯到 {n.url}；第三，该来源层级判定为 {n.source_level}，具备进入公共讨论的基础；第四，内容类型判定为 {n.content_type}；第五，现有摘要强调“{n.summary}”，说明讨论焦点已从技术能力转向教学与治理边界。'
     p3 = f'因此，这件事真正改变的不是课堂里多了一个功能，而是课程组织、教师角色与学校治理之间的关系。过去我们把技术当作教学附加项，现在它正在变成教学结构变量：谁来决定使用边界、如何评价学习效果、怎样保障不同学校的实施条件，这些问题都被同时抛到了台前。'
-    p4 = arg1
-    p5 = f'{arg2} 这也是为什么“只看短期效率”的路径值得警惕。{counter}'
+    p4 = (
+        f'{arg1} 更关键的是，政策一旦写入课程组织链条，就不再是“教师个人愿不愿意尝试”的选择题，而是'
+        '学校系统如何重排时间、资源、评价和问责机制的治理题。学校管理层需要决定：AI环节是进入学科课堂、综合实践'
+        '还是校本课程；不同学段的学习目标如何分层；对学生AI使用行为采取允许、引导还是限制；评价体系中哪些结果可以由'
+        'AI辅助、哪些必须由教师独立判断。若这些前置规则缺位，政策执行会迅速退化成“形式上线、质量失真”：看起来工具普及率上去了，'
+        '但课程目标、学习证据与评价公正性并没有同步提升。换句话说，政策文本的价值不在口号，而在它能否把学校治理从“经验型应对”'
+        '推进到“规则型执行”，这是决定政策能否走到课堂深处的第一道门槛。'
+    )
+    p5 = (
+        f'{arg2} 反方常见观点是“先大规模试点、边跑边改”，理由是教育技术变化太快，先铺开才能积累经验。'
+        f'这一观点有现实吸引力，但并不充分。{counter} 具体到实施层面，若把规则设计完全滞后于应用扩张，最先暴露的问题通常不是'
+        '“技术不好用”，而是“谁来承担后果”——学生学习偏差如何纠正、教师评价争议如何仲裁、学校间资源差距如何补偿。更稳妥的路径应是'
+        '“有限试点 + 规则并行 + 证据评估”：先在可控范围内验证场景，建立最小治理清单（责任边界、数据规范、评价红线、教师支持方案），'
+        '再按证据扩容。这样做并非保守，而是避免将教育公平与课堂质量押注在不确定的执行条件上。'
+    )
     p6 = f'归根到底，{main_judgement} 对这类AI教育议题的评价标准，不应是“是否更快”或“是否更炫”，而应是是否让教育更公平、更有质量、也更能被长期治理。'
     return '\n\n'.join([p1, p2, p3, p4, p5, p6])
 
 
 def _quality_status(candidate_ok: bool, verified_facts: list[str], core_q: str, main_j: str, arg1: str, arg2: str, draft: str) -> tuple[str, str, str]:
     has_continuous_draft = len([p for p in draft.split('\n\n') if p.strip()]) >= 6
-    quality_ready = candidate_ok and len(verified_facts) >= 3 and all([core_q, main_j, arg1, arg2]) and has_continuous_draft
+    paragraphs = [p.strip() for p in draft.split('\n\n') if p.strip()]
+    p4_expanded = len(paragraphs[3]) >= 160 if len(paragraphs) >= 5 else False
+    p5_expanded = len(paragraphs[4]) >= 160 if len(paragraphs) >= 5 else False
+    draft_len = len(draft)
+    enough_policy_facts = len(verified_facts) >= 3
+    quality_ready = (
+        candidate_ok
+        and enough_policy_facts
+        and all([core_q, main_j, arg1, arg2])
+        and has_continuous_draft
+        and p4_expanded
+        and p5_expanded
+        and 1000 <= draft_len <= 1500
+    )
     if quality_ready:
         return 'READY', 'READY', ''
+    if not enough_policy_facts:
+        return 'HOLD', 'HOLD', '事实提炼不足，无法形成可发评论底稿'
     return 'HOLD', 'HOLD', '未满足评论底稿READY最低门槛（事实、判断或成文结构不足）'
 
 
@@ -329,6 +367,7 @@ def run_scan() -> dict[str, str]:
             'candidate': asdict(c),
             'topic_card': t.to_dict(),
             'draft_quality_level': p.draft_quality_level,
+            'hold_reason': p.hold_reason,
             'main_judgement': p.main_judgement,
         }
         records.append(record)
@@ -344,7 +383,10 @@ def run_scan() -> dict[str, str]:
     tp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     (OUTPUT_DIR / 'json' / 'topic_cards_latest.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
 
-    ranked = sorted(ready_records or records, key=lambda r: (r['candidate']['priority_score'], r['draft_quality_level'] == 'READY'), reverse=True)[:3]
+    fact_thin_reason = '事实提炼不足，无法形成可发评论底稿'
+    filtered_records = [r for r in records if r.get('hold_reason') != fact_thin_reason]
+    ranked_pool = ready_records or filtered_records or records
+    ranked = sorted(ranked_pool, key=lambda r: (r['candidate']['priority_score'], r['draft_quality_level'] == 'READY'), reverse=True)[:3]
     brief = ['# 本轮更新简报', '', '## 本轮最值得关注的3条']
     dash = ['# 作者工作台', '', '## 本轮最值得写的3条（优先READY）']
     for r in ranked:
@@ -393,7 +435,10 @@ def run_weekly_review() -> Path:
             if n['id'] in rel:
                 lines.append(f"  - {n['title']} ({n['content_type']})")
 
-    preferred = sorted(records, key=lambda r: (r.get('draft_quality_level') == 'READY', r['candidate']['priority_score']), reverse=True)[0]
+    fact_thin_reason = '事实提炼不足，无法形成可发评论底稿'
+    filtered_records = [r for r in records if r.get('hold_reason') != fact_thin_reason]
+    preferred_pool = filtered_records or records
+    preferred = sorted(preferred_pool, key=lambda r: (r.get('draft_quality_level') == 'READY', r['candidate']['priority_score']), reverse=True)[0]
     lines += [
         '',
         '## 本周最建议下笔的一篇评论',
