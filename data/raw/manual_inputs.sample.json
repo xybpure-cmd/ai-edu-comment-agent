@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "url": "https://example.org/ai-education-policy",
+      "title": "示例：某官方机构发布AI教育政策",
+      "summary": "填写你抓到的核心信息，便于 scan 处理。"
+    },
+    {
+      "url": "https://example.org/school-ai-case",
+      "title": "示例：某学校AI课堂实践",
+      "summary": "可放新闻、案例、研究摘要。"
+    }
+  ]
+}
