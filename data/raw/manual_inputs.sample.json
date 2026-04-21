@@ -1,14 +1,34 @@
 {
   "items": [
     {
-      "url": "https://example.org/ai-education-policy",
-      "title": "示例：某官方机构发布AI教育政策",
-      "summary": "填写你抓到的核心信息，便于 scan 处理。"
+      "url": "https://www.moe.gov.cn/special/ai-policy",
+      "title": "教育部发布AI课程政策",
+      "summary": "强调课程规范与教师能力建设。"
     },
     {
-      "url": "https://example.org/school-ai-case",
-      "title": "示例：某学校AI课堂实践",
-      "summary": "可放新闻、案例、研究摘要。"
+      "url": "https://www.jyb.cn/example/ai-school",
+      "title": "学校实践：AI进课堂",
+      "summary": "关注课堂使用边界。"
+    },
+    {
+      "url": "https://example.gov.cn/local-ai-education",
+      "title": "地方教育局推进中小学AI教育试点",
+      "summary": "反映地方层面AI课程与应用试点的推进情况。"
+    },
+    {
+      "url": "https://example.com/ai-product-school",
+      "title": "某教育AI产品进入学校场景引发讨论",
+      "summary": "关注产品落地后的教学效果、依赖风险与治理边界。"
+    },
+    {
+      "url": "https://unesco.org/example/ai-education-report",
+      "title": "国际机构发布AI与教育最新报告",
+      "summary": "涉及AI对教师角色、学习方式与教育公平的影响。"
+    },
+    {
+      "url": "https://example.com/ai-education-news",
+      "title": "AI在教育中引发争议的公共新闻事件",
+      "summary": "围绕学生使用AI、教师评价或教育公平引发公共讨论。"
     }
   ]
 }
