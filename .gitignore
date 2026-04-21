@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+outputs/json/
+outputs/markdown/
+outputs/txt/
+outputs/briefs/
+data/usage_log.json
